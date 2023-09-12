@@ -1,0 +1,5 @@
+#!/bin/sh
+date=$(date "+%d/%m/%y")
+time=$(date "+%H:%M")
+
+printf " %s  %s\n" "$time" "$date"

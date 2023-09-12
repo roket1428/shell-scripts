@@ -1,0 +1,12 @@
+#!/bin/sh
+
+filename=$(echo $1 | sed 's/\..*$//')
+
+mcs --fatal -out:$filename.exe $1
+
+if [ $? -eq "0" ]; then
+
+	mono $filename.exe
+
+	rm $filename.exe
+fi

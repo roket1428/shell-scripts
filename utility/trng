@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# very experimental
+# trng - tureng command line english to turkish (or viceversa) translate tool
+# caches search results to use less bandwidth
+# dependencies: aria2c
+
+unset IFS
+
+TRNGDICT="$XDG_CONFIG_HOME/trng/dictionary"
+
+arg="$TRNGDICT"/"$*"
+
+if test -z "$*"; then
+	printf "arg required\n" >&2
+	exit 1
+fi
+
+if ! test -d "$TRNGDICT"; then
+	mkdir -p "$TRNGDICT"
+fi
+
+if ! test -e "$arg"; then
+	# encode the input (üöçşığÜÖÇŞĞİ)
+	earg=$(printf "%s" "$*" | sed -e "s/ /%20/g;s/ü/%C3%BC/g;s/ö/%C3%B6/g;s/ç/%C3%A7/g;s/ş/%C5%9F/g;s/ı/%C4%B1/g;s/ğ/%C4%9F/g;s/Ü/%C3%9C/g;s/Ö/%C3%96/g;s/Ç/%C3%87/g;s/Ş/%C5%9E/g;s/Ğ/%C4%9E/g;s/İ/%C4%B0/g")
+
+	# download the webpage with aria2c
+	aria2c -q -d "$TRNGDICT" "https://tureng.com/en/turkish-english/$earg"
+
+	# parse the webpage using the holy trinity
+	grep -e "en tm" -e "tr ts" "$arg" -m 20 | sed -E 's/(<[^>]+>)+//g;s/^ *//' | tr -s ' ' >"$arg".tmp && mv "$arg".tmp "$arg"
+
+	# format the parsed text
+	i=1
+	while test $i -lt "11"; do
+		eng=$(sed -n 'p;n' "$arg" | head -$i | tail -1)
+		tur=$(sed -n 'n;p' "$arg" | head -$i | tail -1)
+
+		# convert html codes and format the output
+		printf "%s\t\t\t\t%s\n" "$eng" "$tur" | sed -e "s/\&\#39\;/\'/g;s/\&\#252\;/ü/g;s/\&\#246\;/ö/g;s/\&\#231\;/ç/g;s/\&\#220\;/Ü/g;s/\&\#214\;/Ö/g;s/\&\#199\;/Ç/g;" >>"$arg".tmp
+
+		i=$((i + 1))
+	done
+	mv "$arg".tmp "$arg"
+
+	if ! test -s "$arg"; then
+		rm "$arg"
+		printf "no translation found\n" >&2
+		exit 1
+	fi
+
+fi
+
+cat "$arg"
+

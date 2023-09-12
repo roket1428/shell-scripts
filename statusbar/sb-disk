@@ -1,0 +1,22 @@
+#!/bin/sh
+# OpenBSD
+# disk="/dev/nvme0n1"
+#
+# listnum=$(df -Pk | grep -c "$disk")
+# num=1
+# totalused=0
+# total=0
+#
+# while [ $num -le "$listnum" ]; do
+# 	sumavail=$(df -Pk | grep "$disk" | awk 'NR=='$num'{print$4}')
+# 	sumused=$(df -Pk | grep "$disk" | awk 'NR=='$num'{print$3}')
+# 	totalused=$((totalused + sumused))
+# 	total=$((total + sumavail + sumused))
+# 	num=$((num + 1))
+# done
+#
+# printf "$(((totalused / 10000) / (total / 1000000)))%%\\n"
+
+#Linux
+printf " %s\n" "$(df -h --output=pcent /dev/mapper/lvmSystem-volRoot | tail -1 | tr -d ' ')"
+

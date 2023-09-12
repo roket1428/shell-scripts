@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# simple script that removes orphans
+# arch-linux based distros only
+
+main()
+{
+	output=0
+	while [ "$(pacman -Qdt | wc -l)" -ge "1" ]; do
+		pkglist=$(pacman -Qdt | sed -e 's/\ .*//g')
+		for pkg in $pkglist; do
+			if [ -n "$noconfirm" ]; then
+				pacman --noconfirm -R "$pkg"
+			else
+				pacman -R "$pkg"
+			fi
+			output=$((output + 1))
+		done
+	done
+
+	if [ "$output" -ge "1" ]; then
+		printf '%s package(s) removed.\n' "$output"
+	else
+		printf 'system is clean\n'
+	fi
+}
+
+if [ "$(whoami)" != "root" ]; then
+	echo "You must be a root user." >&2
+	exit 1
+fi
+
+unset noconfirm
+
+while getopts 'y' opt; do
+	case $opt in
+	y) noconfirm=1 ;;
+	*)
+		printf "unknown opt\n" >&2
+		exit 1
+		;;
+	esac
+done
+
+main

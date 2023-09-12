@@ -1,0 +1,15 @@
+#!/bin/sh
+
+mode=$1
+
+if [ "$mode" = "p" ]; then
+	for i in 0 1 2 3 4 5 6 7; do
+		echo "performance" | sudo tee "/sys/devices/system/cpu/cpu${i}/cpufreq/scaling_governor"
+	done
+fi
+
+if [ "$mode" = "s" ]; then
+	for i in 0 1 2 3 4 5 6 7; do
+		echo "schedutil" | sudo tee "/sys/devices/system/cpu/cpu${i}/cpufreq/scaling_governor"
+	done
+fi

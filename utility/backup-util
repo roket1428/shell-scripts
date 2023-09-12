@@ -1,0 +1,183 @@
+#!/bin/sh
+
+cmd=$1
+dest=$2
+
+# regex for adding a trailing slash: s,\([^\/]$\),\1\/,
+destformat=$(echo "$dest" | sed 's,\/$,,') # this one removes
+dateformat=$(date +%F_%H%M%S)
+
+homedir=/home/roket1428
+
+print_info()
+{
+	printf "\nsaved as %s/%s-%s.tar.xz\n" "$destformat" "$cmd" "$dateformat"
+}
+
+if [ "$(whoami)" != "root" ]; then
+	echo "must be root" >&2
+	exit 1
+fi
+
+
+# $HOME/projects
+if [ "$cmd" = "projects" ]; then
+	cd "${homedir}/projects" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/${cmd}-${dateformat}.tar.xz \
+	--exclude=.stignore \
+	--exclude-vcs-ignores . && print_info
+fi
+
+# $HOME/.passwd
+# $HOME/.ssh
+if [ "$cmd" = "passdb" ]; then
+	cd "$homedir" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/passdb-${dateformat}.tar.xz .passwd .ssh && print_info
+fi
+
+# $HOME/.bashrc
+# $HOME/.inputrc
+# $HOME/.kshrc
+# $HOME/.profile
+# $HOME/.tmux.conf
+# $HOME/.xinitrc
+if [ "$cmd" = "dotfiles" ]; then
+	cd "$homedir" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/dotfiles-${dateformat}.tar.xz .bashrc .inputrc .kshrc .profile .tmux.conf .xinitrc && print_info
+fi
+
+# $HOME/.bin
+if [ "$cmd" = "bin" ]; then
+	cd "$homedir" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/bin-${dateformat}.tar.xz \
+	--exclude=.stignore \
+	--exclude=.bin/go \
+	--exclude=.bin/run \
+	.bin && print_info
+fi
+
+# $HOME/.config
+if [ "$cmd" = "configs" ]; then
+	cd "$homedir" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/configs-${dateformat}.tar.xz \
+	--exclude=xournalpp \
+	--exclude-backups --exclude-vcs-ignores \
+	--exclude-tag-all=blob_storage \
+	--exclude-backups \
+	--exclude-caches \
+	--exclude=.stignore .config && print_info
+fi
+
+# $HOME/files/* except videos pdfs music
+if [ "$cmd" = "files" ]; then
+	cd "${homedir}/files" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/files-${dateformat}.tar.xz \
+	--exclude=.stignore backup doc images school screenshots tintka && print_info
+fi
+
+# $HOME/files/pdfs
+if [ "$cmd" = "pdfs" ]; then
+	cd "${homedir}/files" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/pdfs-${dateformat}.tar.xz \
+	--exclude=.stignore pdfs && print_info
+
+fi
+
+# $HOME/files/music
+if [ "$cmd" = "music" ]; then
+	cd "${homedir}/files" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/music-${dateformat}.tar.xz \
+	--exclude=.stignore music && print_info
+
+fi
+
+# $HOME/files/videos
+if [ "$cmd" = "videos" ]; then
+	cd "${homedir}/files" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/videos-${dateformat}.tar.xz \
+	--exclude=.stignore videos && print_info
+fi
+
+# $HOME/src
+if [ "$cmd" = "src" ]; then
+	cd "$homedir" || exit 1
+	tar -I "xz -0" -vcpf ${destformat}/src-${dateformat}.tar.xz \
+	--exclude=*cache* \
+	--exclude=*Cache* \
+	--exclude-vcs-ignores \
+	--exclude-backups \
+	--exclude-caches \
+	--exclude-caches-all \
+	--exclude-tag-all=blob_storage \
+	--exclude=.stignore src && print_info
+fi
+
+# if [ "$cmd" = "home" ]; then
+# 	cd "$homedir" || exit 1
+# 	tar -I "xz -0" -vcpf ${destformat}/home-${dateformat}.tar.xz \
+# 	--exclude=.cache \
+# 	--exclude=.cargo \
+# 	--exclude=.config \
+# 	--exclude=.dbus \
+# 	--exclude=.data \
+# 	--exclude=.designer \
+# 	--exclude=.dotnet \
+# 	--exclude=.eclipse \
+# 	--exclude=.FreeCAD \
+# 	--exclude=.gradle \
+# 	--exclude=.ipython \
+# 	--exclude=.JASP \
+# 	--exclude=.java \
+# 	--exclude=.jupyter \
+# 	--exclude=.links \
+# 	--exclude=.local \
+# 	--exclude=.p2 \
+# 	--exclude=.m2 \
+# 	--exclude=.minecraft \
+# 	--exclude=.mozilla \
+# 	--exclude=.npm \
+# 	--exclude=.nuget \
+# 	--exclude=.pgadmin \
+# 	--exclude=.pki \
+# 	--exclude=.rustup \
+# 	--exclude=.steam \
+# 	--exclude=.swt \
+# 	--exclude=.templateengine \
+# 	--exclude=.thunderbird \
+# 	--exclude=.tooling \
+# 	--exclude=.var \
+# 	--exclude=.vscode-oss \
+# 	--exclude=.w3m \
+# 	--exclude=.wine \
+# 	--exclude=.yarn \
+# 	--exclude=.vms \
+# 	--exclude=.pulse-cookie \
+# 	--exclude=.viminfo \
+# 	--exclude=.Xauthority \
+# 	--exclude=.steampath \
+# 	--exclude=.steampid \
+# 	--exclude=.stignore \
+# 	--exclude=.android \
+# 	--exclude=Android \
+# 	--exclude=nltk_data \
+# 	--exclude=downloads \
+# 	--exclude=files \
+# 	--exclude=torrents \
+# 	--exclude=music \
+# 	--exclude=pdfs \
+# 	--exclude=src \
+# 	--exclude=projects \
+# 	--exclude=videos \
+# 	--exclude=Trash \
+# 	--exclude=.bin/go \
+# 	--exclude=.bin/run \
+# 	--exclude=*cache* \
+# 	--exclude=*Cache* \
+# 	--exclude-vcs-ignores \
+# 	--exclude-backups \
+# 	--exclude-caches \
+# 	--exclude-caches-all \
+# 	--exclude-tag-all=blob_storage \
+# 	--warning=no-file-changed . && printf "\nsaved as ${destformat}/home-${dateformat}.tar.xz\n"
+#
+# fi

@@ -1,0 +1,35 @@
+#!/bin/sh
+BINDIR="$HOME/.bin"
+bat=$(cat /sys/class/power_supply/BAT0/capacity)
+status=$(cat /sys/class/power_supply/BAT0/status)
+
+if [ "$status" != "Charging" ]; then
+	if [ "$bat" -le "15" ]; then
+		mpg123 -q "$BINDIR"/beep.mp3
+	fi
+	if [ "$bat" -eq "100" ]; then
+		baticon="" 
+	elif [ "$bat" -ge "75" ]; then
+		baticon=""
+	elif [ "$bat" -ge "50" ]; then
+		baticon="" 
+	elif [ "$bat" -ge "25" ]; then
+		baticon=""
+	else
+		baticon="" 
+	fi
+else
+	baticon=""
+fi
+
+if [ "$1" = "cap" ]; then
+	echo "($(cat /sys/class/power_supply/BAT0/energy_full)*100)/$(cat /sys/class/power_supply/BAT0/energy_full_design)" | bc -l
+else
+	bltinfo=$(bluetoothctl info)
+	if [ $? = "1" ]; then
+		printf "%s %d%%\n" "$baticon" "$bat"
+	else
+		bltbat=$(echo "$bltinfo" | grep "Battery" | sed 's/^.*(//g;s/)//')
+		printf "%s %d%%   %d%%\n" "$baticon" "$bat" "$bltbat"
+	fi
+fi

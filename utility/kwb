@@ -1,0 +1,69 @@
+#!/bin/sh
+# Work in progress (NOT WORKING RIGHT NOW)
+# create a browse-able knowledge base for the stuff i learn
+
+KWB_BASEDIR="$HOME/projects/knowledge_base"
+
+arg=$1
+lang=$2
+topic=$3
+
+
+case $arg in
+	play)
+		shift
+		lang=$1
+		topic=$2
+
+		case $lang in
+			hare)
+				ext=ha
+				break;;
+			perl)
+				ext=pl
+				break;;
+			python)
+				ext=py
+				break;;
+			rust)
+				ext=rs
+				break;;
+			shell)
+				ext=sh
+				break;;
+			*)
+				ext=$lang;;
+		esac
+
+		$EDITOR $KWB_BASEDIR/$lang/$topic.$ext
+
+		break;;
+
+	help)
+		cat <<<EOF
+		Usage: $0 [ play | help ] lang topic
+		       $0 list lang
+		       $0
+
+		ex: kwb c enums
+		    kwb play c enums
+		    kwb help
+		    kwb
+
+
+		EOF
+		break;;
+	list)
+		printf "Available topics for $lang\n"
+		ls -1 "$KWB_BASEDIR/$lang/" | sed '/\./d'
+		break;;
+	*)
+		if ! [ -z $1 ]; then
+			cat "$KWB_BASEDIR/$lang/$topic"
+			exit
+		fi
+
+		printf "Available languages:\n"
+		ls $KWB_BASEDIR
+
+esac

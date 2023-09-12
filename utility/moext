@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# m (mount) or u (umount)
+cmd=$1
+
+# target partition (ex: /dev/sda1 or /dev/mapper/sda1)
+target=$2
+mountpoint=$3
+
+# /dev/sda1 -> sda1
+partition="vol-$(echo $target | sed 's/^.*\///')"
+
+if [ "$(whoami)" != "root" ]; then
+	echo "must be root" >&2
+	exit 1
+fi
+
+if [ "$cmd" == "m" ]; then
+	cryptsetup luksOpen $target $partition
+	mount /dev/mapper/$partition $mountpoint
+fi
+
+if [ "$cmd" == "u" ]; then
+	partition="vol-$(echo $target | sed 's/^.*-//')"
+	umount $target
+	cryptsetup luksClose /dev/mapper/$partition
+fi

@@ -1,0 +1,62 @@
+#!/bin/sh
+write_target()
+{
+	echo "$1" > "$target"
+}
+
+increase()
+{
+	current="$(cat $target)"
+	if [ "$((current + $1))" -ge "$max" ]; then
+		write_target "$max"
+	else
+		write_target "$((current + $1))"
+	fi
+}
+
+decrease()
+{
+	current="$(cat $target)"
+	if [ "$((current - $1))" -le "$min" ]; then
+		write_target "$min"
+	else
+		write_target "$((current - $1))"
+	fi
+}
+
+usage()
+{
+	cat <<EOF
+Usage: $0 [ -i INCREASE_LEVEL ] | [ -d DECREASE_LEVEL ] [ -h ]
+
+	-i arg 		increase backlight level
+	-d arg		decrease backlight level
+
+	-h		display this text
+
+EOF
+	exit
+}
+
+unset inc dec
+max=255
+min=0
+target="/sys/class/backlight/amdgpu_bl0/brightness"
+
+while getopts 'i:d:h' opt; do
+	case $opt in
+	i) inc=true iarg=$OPTARG ;;
+	d) dec=true darg=$OPTARG ;;
+	h | *) usage ;;
+	esac
+
+done
+
+if [ -n "$inc" ]; then
+	increase "$iarg"
+elif [ -n "$dec" ]; then
+	decrease "$darg"
+else
+	level="$(cat $target)"
+	printf " %d%%\n" "$(((level * 100) / 255))"
+fi

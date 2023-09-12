@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# first arg window id
+wid=$1
+
+# second arg left click duration (for hammer: sand, gravel = 0.6, cobblestone = 1.5)
+slp=$2
+
+# start at slot 1
+xdotool key --window "$wid" 1
+
+while true; do
+	# hold left click
+	xdotool mousedown --window "$wid" 1
+	sleep $slp
+	xdotool mouseup --window "$wid" 1
+
+	# switch to slot 2
+	xdotool key --window "$wid" 2
+
+	# right click once
+	xdotool click --window "$wid" 3
+
+	# inventory tweaks
+	xdotool keydown --window "$wid" k
+	sleep .05
+	xdotool keyup --window "$wid" k
+
+	# switch back to slot 1
+	xdotool key --window "$wid" 1
+done

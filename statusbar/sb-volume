@@ -1,0 +1,20 @@
+#!/bin/sh
+# OpenBSD
+#if [ "$(sndioctl -n output.mute)" -eq "0" ]; then
+#
+#	level=$(sndioctl -n output.level)
+#
+#	output=$(printf "100 * $level" | bc)
+#
+#	printf " %0.f%%\\n" "$output"
+#
+#else
+#	printf ' \n'
+#fi
+
+# Linux
+if [ "$(pamixer --get-mute)" = "false" ]; then
+		printf " %s%%\\n" "$(pamixer --get-volume)"
+else
+	printf ' \n'
+fi

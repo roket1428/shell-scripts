@@ -1,0 +1,160 @@
+#!/bin/sh
+
+# fmc - ffmpeg music converter
+
+# this tool converts multiple music files at once using ffmpeg
+
+# error handling
+die()
+{
+	printf "%s\\n" "$1" >&2
+	exit 1
+}
+
+
+# check input and change directory
+ckchdir()
+{
+
+if [ -z "$1" ]
+then
+        die "error: input is blank"
+else
+        if [ -f "$1" ]; then
+		die "error: input must be a directory"
+	fi
+
+	cd "$1" || die "error: can't change directory, exiting"
+
+fi
+}
+
+
+# convert files from directory
+cvdir()
+{
+
+list=$(find . -name "*.$srcext" -maxdepth 1 | wc -l)
+line=1
+
+while [ $line -le "$list" ]
+do
+
+	ffmpeg -hide_banner -loglevel error -i \
+		"$(find . -name "*.$srcext" -maxdepth 1 | head -$line | tail +$line | sed -e 's/\.\///')" \
+		"$(find . -name "*.$srcext" -maxdepth 1 | head -$line | tail +$line | sed -e "s/\.\///;s/\.${srcext}$/\.${trgext}/")"
+
+	printf "converting %s\\n" "$(find . -name "*.$srcext" -maxdepth 1 | head -$line | tail +$line | sed -e 's/\.\///')"
+
+	[ "$rmwhspc" -eq "1" ] \
+		&& mv \
+		"$(find . -name "*.$trgext" -maxdepth 1 | grep '[[:space:]]' | head -1 | tail +1 | sed -e 's/\.\///')" \
+		"$(find . -name "*.$trgext" -maxdepth 1 | grep '[[:space:]]' | head -1 | tail +1 | sed -e 's/\.\///;s/\ /_/g')"
+
+	line=$((line + 1))
+done
+
+rmline=1
+if [ "$rmorig" -eq "1" ]; then
+
+	while [ $rmline -le "$list" ]
+	do
+		printf "removing %s\\n" "$(find . -name "*.$srcext" -maxdepth 1 | head -1 | tail +1 | sed -e 's/\.\///')"
+
+		rm "$(find . -name "*.$srcext" -maxdepth 1 | head -1 | tail +1 | sed -e 's/\.\///')"
+		rmline=$((rmline + 1))
+	done
+fi
+
+}
+
+
+# convert files recursively
+cvrec()
+{
+
+list=$(find . -name "*.$srcext" | wc -l)
+line=1
+
+while [ $line -le "$list" ]
+do
+
+	ffmpeg -hide_banner -loglevel error -i \
+		"$(find . -name "*.$srcext" | head -$line | tail +$line | sed -e 's/\.\///')" \
+		"$(find . -name "*.$srcext" | head -$line | tail +$line | sed -e "s/\.\///;s/\.${srcext}$/\.${trgext}/")"
+
+	printf "converting %s\\n" "$(find . -name "*.$srcext" | head -$line | tail +$line | sed -e 's/\.\///')"
+
+	if [ "$rmwhspc" -eq "1" ]
+	then
+		cd "$(find . -name "*.$trgext" | sed -e 's/\.\///;s#[^/]*$##g' | head -$line | tail +$line)" || exit 1
+
+		mv "$(find . -name "*.$trgext" -maxdepth 1 | grep '[[:space:]]' | head -1 | tail +1 | sed -e 's/\.\///')" \
+			"$(find . -name "*.$trgext" -maxdepth 1 | grep '[[:space:]]' | head -1 | tail +1 | sed -e 's/\.\///;s/\ /_/g')"
+
+		cd "$rootdir" || die "error: can't change directory, exiting"
+	fi
+	line=$((line + 1))
+done
+
+rmline=1
+if [ "$rmorig" -eq "1" ]; then
+
+	while [ $rmline -le "$list" ]
+	do
+		printf "removing %s\\n" "$(find . -name "*.$srcext" | head -1 | tail +1 | sed -e 's/\.\///')"
+
+		rm "$(find . -name "*.$srcext" | head -1 | tail +1 | sed -e 's/\.\///')"
+		rmline=$((rmline + 1))
+	done
+fi
+}
+
+
+usage()
+{
+cat <<EOF
+Usage: $0 -rb [ -i FILETYPE ] [ -o FILETYPE ] [ -R PATH ] -h PATH
+
+	-r	remove original files
+
+	-b	replace whitespace with underscore
+
+	-i	file extension to convert from ex.(mp3, m4a)
+
+	-o	file extension to convert to ex.(flac, ogg)
+
+	-R	convert files from specified directory recursively
+
+	-h	display this text
+EOF
+exit
+
+}
+
+while getopts 'rbi:o:R:h' opt
+do
+	case $opt in
+	r) rmorig=1 ;;
+	b) rmwhspc=1 ;;
+	i) srcext=$OPTARG ;;
+	o) trgext=$OPTARG ;;
+	R) recursive=1; rcdir=$OPTARG;;
+	h|*) usage ;;
+	esac
+done
+
+
+if [ "$recursive" -eq "1" ]
+then
+
+	ckchdir "$rcdir"
+	rootdir="$(pwd)"
+	cvrec "$rcdir"
+else
+	shift $((OPTIND-1))
+	ckchdir "$@"
+	cvdir "$@"
+fi
+
+
