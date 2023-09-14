@@ -7,13 +7,13 @@ if [ "$status" != "Charging" ]; then
 	if [ "$bat" -le "15" ]; then
 		mpg123 -q "$BINDIR"/beep.mp3
 	fi
-	if [ "$bat" -eq "100" ]; then
+	if [ "$bat" -gt "80" ]; then
 		baticon="" 
-	elif [ "$bat" -ge "75" ]; then
+	elif [ "$bat" -gt "50" ]; then
 		baticon=""
-	elif [ "$bat" -ge "50" ]; then
+	elif [ "$bat" -gt "30" ]; then
 		baticon="" 
-	elif [ "$bat" -ge "25" ]; then
+	elif [ "$bat" -gt "15" ]; then
 		baticon=""
 	else
 		baticon="" 
