@@ -41,7 +41,7 @@ EOF
 unset inc dec
 max=255
 min=0
-target="/sys/class/backlight/amdgpu_bl0/brightness"
+target="/sys/class/backlight/amdgpu_bl1/brightness"
 
 while getopts 'i:d:h' opt; do
 	case $opt in
