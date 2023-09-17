@@ -9,9 +9,9 @@ if [ "$status" != "Charging" ]; then
 	fi
 	if [ "$bat" -gt "80" ]; then
 		baticon="" 
-	elif [ "$bat" -gt "50" ]; then
+	elif [ "$bat" -gt "60" ]; then
 		baticon=""
-	elif [ "$bat" -gt "30" ]; then
+	elif [ "$bat" -gt "45" ]; then
 		baticon="" 
 	elif [ "$bat" -gt "15" ]; then
 		baticon=""
