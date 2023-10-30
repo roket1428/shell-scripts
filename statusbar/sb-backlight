@@ -4,6 +4,18 @@ write_target()
 	echo "$1" > "$target"
 }
 
+set_bl()
+{
+	scaled_input=$(((255 * $1) / 100))
+	if [ "$scaled_input" -ge "$max" ]; then
+		write_target "$max"
+	elif [ "$scaled_input" -le "$min" ]; then
+		write_target "$min"
+	else
+		write_target "$scaled_input"
+	fi
+}
+
 increase()
 {
 	current="$(cat $target)"
@@ -27,10 +39,11 @@ decrease()
 usage()
 {
 	cat <<EOF
-Usage: $0 [ -i INCREASE_LEVEL ] | [ -d DECREASE_LEVEL ] [ -h ]
+Usage: $0 [ -i INCREASE_LEVEL ] | [ -d DECREASE_LEVEL ] | [ -s BL_LEVEL ] | -h
 
-	-i arg 		increase backlight level
-	-d arg		decrease backlight level
+	-i [0..$max]	increase backlight level
+	-d [0..$max]	decrease backlight level
+	-s [0..100]		set backlight level
 
 	-h		display this text
 
@@ -38,15 +51,16 @@ EOF
 	exit
 }
 
-unset inc dec
+unset inc dec setbl
 max=255
 min=0
 target="/sys/class/backlight/amdgpu_bl1/brightness"
 
-while getopts 'i:d:h' opt; do
+while getopts 'i:d:s:h' opt; do
 	case $opt in
 	i) inc=true iarg=$OPTARG ;;
 	d) dec=true darg=$OPTARG ;;
+	s) setbl=true sarg=$OPTARG ;;
 	h | *) usage ;;
 	esac
 
@@ -56,6 +70,8 @@ if [ -n "$inc" ]; then
 	increase "$iarg"
 elif [ -n "$dec" ]; then
 	decrease "$darg"
+elif [ -n "$setbl" ]; then
+	set_bl "$sarg"
 else
 	level="$(cat $target)"
 	printf " %d%%\n" "$(((level * 100) / 255))"
