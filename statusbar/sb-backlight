@@ -6,33 +6,35 @@ write_target()
 
 set_bl()
 {
-	scaled_input=$(((255 * $1) / 100))
-	if [ "$scaled_input" -ge "$max" ]; then
+	rounded_input=$(printf "%.0f" "$(echo "((255*$1)/100)+0.5" | bc -l)")
+	if [ "$rounded_input" -ge "$max" ]; then
 		write_target "$max"
-	elif [ "$scaled_input" -le "$min" ]; then
+	elif [ "$rounded_input" -le "$min" ]; then
 		write_target "$min"
 	else
-		write_target "$scaled_input"
+		write_target "$rounded_input"
 	fi
 }
 
 increase()
 {
 	current="$(cat $target)"
-	if [ "$((current + $1))" -ge "$max" ]; then
+	rounded_input=$(printf "%.0f" "$(echo "$current+((255*$1)/100)" | bc -l)")
+	if [ "$rounded_input" -ge "$max" ]; then
 		write_target "$max"
 	else
-		write_target "$((current + $1))"
+		write_target "$rounded_input"
 	fi
 }
 
 decrease()
 {
 	current="$(cat $target)"
-	if [ "$((current - $1))" -le "$min" ]; then
+	rounded_input=$(printf "%.0f" "$(echo "$current-((255*$1)/100)" | bc -l)")
+	if [ "$rounded_input" -le "$min" ]; then
 		write_target "$min"
 	else
-		write_target "$((current - $1))"
+		write_target "$rounded_input"
 	fi
 }
 
@@ -45,22 +47,25 @@ Usage: $0 [ -i INCREASE_LEVEL ] | [ -d DECREASE_LEVEL ] | [ -s BL_LEVEL ] | -h
 	-d [0..$max]	decrease backlight level
 	-s [0..100]		set backlight level
 
-	-h		display this text
+	-r 						show real values instead of percentage
+
+	-h						display this text
 
 EOF
 	exit
 }
 
-unset inc dec setbl
+unset inc dec setbl realvalues
 max=255
 min=0
 target="/sys/class/backlight/amdgpu_bl1/brightness"
 
-while getopts 'i:d:s:h' opt; do
+while getopts 'i:d:s:hr' opt; do
 	case $opt in
 	i) inc=true iarg=$OPTARG ;;
 	d) dec=true darg=$OPTARG ;;
 	s) setbl=true sarg=$OPTARG ;;
+	r) realvalues=true ;;
 	h | *) usage ;;
 	esac
 
@@ -74,5 +79,9 @@ elif [ -n "$setbl" ]; then
 	set_bl "$sarg"
 else
 	level="$(cat $target)"
-	printf " %d%%\n" "$(((level * 100) / 255))"
+	if [ -n "$realvalues" ]; then
+		echo "$level"
+	else
+		printf " %.0f%%\n" "$(echo "(($level*100)/255)+0.5" | bc -l)"
+	fi
 fi
